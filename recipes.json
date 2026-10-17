@@ -1,0 +1,16 @@
+[
+  {
+    "id": "supreme-pizza",
+    "name": "Supreme Pizza",
+    "ingredients": [
+      { "name": "Universal Mixture", "grams": 250, "source": "Home" },
+      { "name": "Carp Rival", "grams": 1500, "source": "Shop" },
+      { "name": "Big Riverine Breamer", "grams": 750, "source": "Shop" },
+      { "name": "Tutti Frutti Supreme", "grams": 112, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 100, "source": "Shop" },
+      { "name": "Giant Octopus Supreme", "grams": 112, "source": "Shop" },
+      { "name": "Hemp-Corn", "grams": 249, "source": "Home" },
+      { "name": "Oilcake-Pea", "grams": 249, "source": "Home" }
+    ]
+  }
+]
