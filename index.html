@@ -87,10 +87,45 @@
                 </div>
             </div>
 
+            <!-- Single Material Stock Optimizer -->
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <h2 class="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked"></i> 2. Optimasi Sisa 1 Stok
+                </h2>
+                <p class="text-xs text-slate-400 mb-3">Pilih 1 bahan pembatas yang tersisa untuk menghitung proporsi rasio seluruh bahan lainnya:</p>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Bahan Tersisa</label>
+                        <select id="singleStockMaterialSelect" class="w-full text-xs rounded-lg p-2 border">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jumlah Sisa Gram</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="singleStockGramInput" placeholder="Contoh: 150" class="w-full text-xs rounded p-2 border">
+                            <span class="text-xs text-slate-400">g</span>
+                        </div>
+                    </div>
+
+                    <button onclick="calculateSingleMaterialMax()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> Hitung & Terapkan Rasio
+                    </button>
+                </div>
+
+                <div id="singleStockResultBox" class="mt-4 p-3 bg-slate-900/90 rounded-lg border border-purple-900/50 hidden">
+                    <p class="text-xs text-purple-300 font-bold mb-1">Hasil Hitung Rasio:</p>
+                    <p class="text-xs text-slate-300">Multiplier Terhitung: <strong id="singleMaxMultResult" class="text-emerald-400 font-bold">0x</strong></p>
+                    <p class="text-xs text-slate-300">Total Berat Racikan: <strong id="singleMaxWeightResult" class="text-emerald-400 font-bold">0 g</strong></p>
+                </div>
+            </div>
+
             <!-- Cost Summary Box -->
             <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
                 <h2 class="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-coins"></i> 2. Estimasi Biaya Belanja Shop
+                    <i class="fa-solid fa-coins"></i> 3. Estimasi Biaya Belanja Shop
                 </h2>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
@@ -103,31 +138,6 @@
                     </div>
                 </div>
                 <p class="text-[11px] text-slate-400 mt-2 italic">*Pembelian dibulatkan ke atas sesuai kemasan/pack game.</p>
-            </div>
-
-            <!-- Stock Optimizer / Limiting Factor Box -->
-            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
-                <h2 class="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-boxes-stacked"></i> 3. Manajemen Sisa Stok
-                </h2>
-                <p class="text-xs text-slate-400 mb-3">Masukkan stok sisa di inventaris untuk mencari racikan maksimal yang bisa dibuat:</p>
-
-                <div id="stockInputContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 mb-3">
-                    <!-- Populated via JS -->
-                </div>
-
-                <button onclick="calculateMaxPossibleRecipe()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-calculator"></i> Hitung Racikan Maksimal
-                </button>
-
-                <div id="stockResultBox" class="mt-4 p-3 bg-slate-900/90 rounded-lg border border-purple-900/50 hidden">
-                    <p class="text-xs text-purple-300 font-bold mb-1">Hasil Optimasi Stok:</p>
-                    <p class="text-xs text-slate-300 mb-2">Max Multiplier: <strong id="maxMultResult" class="text-emerald-400 font-bold">0x</strong> (<span id="maxWeightResult">0 g</span>)</p>
-                    <p class="text-[11px] text-rose-400 mb-2" id="limitingFactorMsg"></p>
-                    <button onclick="applyMaxMultiplier()" class="w-full bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 py-1.5 rounded border border-emerald-800 transition">
-                        Terapkan Multiplier Ini
-                    </button>
-                </div>
             </div>
 
             <!-- Chart Breakdown -->
@@ -229,7 +239,6 @@
         let activeRecipeId = "";
         let currentMultiplier = 1;
         let chartInstance = null;
-        let calculatedMaxMult = 1;
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadExternalData();
@@ -295,7 +304,7 @@
         }
 
         function updateMultiplier(val) {
-            currentMultiplier = parseFloat(val);
+            currentMultiplier = parseFloat(parseFloat(val).toFixed(2));
             document.getElementById('multiplierValueDisplay').textContent = `${currentMultiplier}x`;
             document.getElementById('multiplierSlider').value = currentMultiplier;
             document.getElementById('tableMultDisplay').textContent = `${currentMultiplier}x`;
@@ -305,66 +314,54 @@
         function loadRecipe() {
             activeRecipeId = document.getElementById('recipeSelect').value;
             renderCurrentRecipeTable();
-            renderStockInputs();
+            populateSingleStockDropdown();
         }
 
-        function renderStockInputs() {
+        function populateSingleStockDropdown() {
             const recipe = recipes.find(r => r.id === activeRecipeId);
-            const container = document.getElementById('stockInputContainer');
-            container.innerHTML = '';
+            const select = document.getElementById('singleStockMaterialSelect');
+            select.innerHTML = '';
 
             if (!recipe || !recipe.ingredients.length) {
-                container.innerHTML = '<p class="text-xs text-slate-500">Tidak ada bahan di resep ini.</p>';
+                select.innerHTML = '<option value="">(Resep Kosong)</option>';
                 return;
             }
 
-            recipe.ingredients.forEach((ing, idx) => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center text-xs gap-2";
-                div.innerHTML = `
-                    <span class="text-slate-300 truncate w-1/2">${ing.name}</span>
-                    <div class="flex items-center gap-1 w-1/2">
-                        <input type="number" id="stock_input_${idx}" placeholder="Sisa stok (g)" value="${ing.grams}" class="w-full text-right p-1 rounded border text-xs">
-                        <span class="text-slate-400">g</span>
-                    </div>
-                `;
-                container.appendChild(div);
+            recipe.ingredients.forEach(ing => {
+                const opt = document.createElement('option');
+                opt.value = ing.name;
+                opt.textContent = `${ing.name} (Standar 1x: ${ing.grams}g)`;
+                select.appendChild(opt);
             });
         }
 
-        function calculateMaxPossibleRecipe() {
+        function calculateSingleMaterialMax() {
             const recipe = recipes.find(r => r.id === activeRecipeId);
             if (!recipe || !recipe.ingredients.length) return;
 
-            let minPossibleMult = Infinity;
-            let limitingItem = "";
-            let totalGrams1x = recipe.ingredients.reduce((acc, i) => acc + i.grams, 0);
+            const selectedMaterialName = document.getElementById('singleStockMaterialSelect').value;
+            const remainingGrams = parseFloat(document.getElementById('singleStockGramInput').value);
 
-            recipe.ingredients.forEach((ing, idx) => {
-                const stockVal = parseFloat(document.getElementById(`stock_input_${idx}`).value) || 0;
-                const maxMultForThisItem = stockVal / ing.grams;
-
-                if (maxMultForThisItem < minPossibleMult) {
-                    minPossibleMult = maxMultForThisItem;
-                    limitingItem = ing.name;
-                }
-            });
-
-            if (minPossibleMult === Infinity || minPossibleMult <= 0) {
-                alert("Stok bahan tidak mencukupi untuk membuat racikan!");
+            if (!selectedMaterialName || isNaN(remainingGrams) || remainingGrams <= 0) {
+                alert("Pilih bahan dan masukkan sisa gram yang valid!");
                 return;
             }
 
-            calculatedMaxMult = parseFloat(minPossibleMult.toFixed(2));
-            const totalWeightMax = Math.round(totalGrams1x * calculatedMaxMult);
+            const targetIngredient = recipe.ingredients.find(i => i.name === selectedMaterialName);
+            if (!targetIngredient || targetIngredient.grams <= 0) return;
 
-            document.getElementById('maxMultResult').textContent = `${calculatedMaxMult}x`;
-            document.getElementById('maxWeightResult').textContent = `${totalWeightMax.toLocaleString()} g`;
-            document.getElementById('limitingFactorMsg').textContent = `*Bahan pembatas terpakai habis: ${limitingItem}`;
-            document.getElementById('stockResultBox').classList.remove('hidden');
+            // Calculate exact multiplier from the single limiting material
+            const calculatedMult = parseFloat((remainingGrams / targetIngredient.grams).toFixed(2));
+            const totalGrams1x = recipe.ingredients.reduce((acc, i) => acc + i.grams, 0);
+            const totalWeightScaled = Math.round(totalGrams1x * calculatedMult);
+
+            document.getElementById('singleMaxMultResult').textContent = `${calculatedMult}x`;
+            document.getElementById('singleMaxWeightResult').textContent = `${totalWeightScaled.toLocaleString()} g`;
+            document.getElementById('singleStockResultBox').classList.remove('hidden');
+
+            // Apply calculated multiplier directly
+            updateMultiplier(calculatedMult);
         }
-
-        function applyMaxMultiplier() { updateMultiplier(calculatedMaxMult); }
 
         function renderCurrentRecipeTable() {
             const recipe = recipes.find(r => r.id === activeRecipeId);
@@ -458,7 +455,7 @@
             recipe.ingredients.push({ name, grams, source });
             saveData();
             renderCurrentRecipeTable();
-            renderStockInputs();
+            populateSingleStockDropdown();
             document.getElementById('ingredientGram').value = '';
         }
 
@@ -470,7 +467,7 @@
                 recipe.ingredients[index].grams = parsed;
                 saveData();
                 renderCurrentRecipeTable();
-                renderStockInputs();
+                populateSingleStockDropdown();
             }
         }
 
@@ -488,7 +485,7 @@
             recipe.ingredients.splice(index, 1);
             saveData();
             renderCurrentRecipeTable();
-            renderStockInputs();
+            populateSingleStockDropdown();
         }
 
         function promptNewRecipe() {
@@ -500,7 +497,7 @@
             saveData();
             renderRecipeOptions();
             renderCurrentRecipeTable();
-            renderStockInputs();
+            populateSingleStockDropdown();
         }
 
         function deleteCurrentRecipe() {
@@ -511,7 +508,7 @@
                 saveData();
                 renderRecipeOptions();
                 renderCurrentRecipeTable();
-                renderStockInputs();
+                populateSingleStockDropdown();
             }
         }
 
@@ -556,7 +553,7 @@
                     saveData();
                     renderRecipeOptions();
                     renderCurrentRecipeTable();
-                    renderStockInputs();
+                    populateSingleStockDropdown();
                 } catch(err) { alert("Format JSON tidak valid!"); }
             };
             reader.readAsText(file);
