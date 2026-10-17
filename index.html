@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fishing Planet Groundbait Calculator & Price Estimator</title>
+    <title>Fishing Planet Groundbait Calculator & Stock Manager</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -38,7 +38,7 @@
                 <i class="fa-solid fa-fish-fins text-emerald-400 text-3xl"></i>
                 <div>
                     <h1 class="text-lg font-bold text-white tracking-wide">Fishing Planet Groundbait Calc</h1>
-                    <p class="text-xs text-slate-400">Calculator, Cost Estimator & Recipe Manager</p>
+                    <p class="text-xs text-slate-400">Racikan, Estimasi Belanja & Optimasi Sisa Stok</p>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -55,20 +55,19 @@
 
     <main class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Controls & Summary Column -->
+        <!-- Controls Column -->
         <div class="lg:col-span-1 space-y-6">
 
             <!-- Recipe Selector & Multiplier -->
             <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
                 <h2 class="text-sm font-semibold text-emerald-400 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-sliders"></i> Resep & Multiplier
+                    <i class="fa-solid fa-sliders"></i> 1. Resep & Multiplier
                 </h2>
 
                 <div class="space-y-4">
                     <div>
                         <label class="block text-xs font-medium text-slate-400 mb-1">Pilih Resep</label>
-                        <select id="recipeSelect" onchange="loadRecipe()" class="w-full text-xs rounded-lg p-2.5 border">
-                        </select>
+                        <select id="recipeSelect" onchange="loadRecipe()" class="w-full text-xs rounded-lg p-2.5 border"></select>
                     </div>
 
                     <div>
@@ -76,7 +75,7 @@
                             <label class="text-xs font-medium text-slate-400">Pengali Umpan (Multiplier)</label>
                             <span id="multiplierValueDisplay" class="text-sm font-bold text-emerald-400">1x</span>
                         </div>
-                        <input type="range" id="multiplierSlider" min="0.5" max="10" step="0.5" value="1" oninput="updateMultiplier(this.value)" class="w-full accent-emerald-500">
+                        <input type="range" id="multiplierSlider" min="0.1" max="10" step="0.1" value="1" oninput="updateMultiplier(this.value)" class="w-full accent-emerald-500">
                         <div class="grid grid-cols-5 gap-1 mt-2">
                             <button onclick="updateMultiplier(0.5)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">0.5x</button>
                             <button onclick="updateMultiplier(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">1x</button>
@@ -91,7 +90,7 @@
             <!-- Cost Summary Box -->
             <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
                 <h2 class="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-coins"></i> Total Estimasi Biaya Shop
+                    <i class="fa-solid fa-coins"></i> 2. Estimasi Biaya Belanja Shop
                 </h2>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
@@ -103,7 +102,32 @@
                         <p id="totalBaitcoinsCost" class="text-base font-extrabold text-yellow-500 mt-0.5">0</p>
                     </div>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-2 italic">*Jumlah pack/botol dihitung otomatis (dibulatkan ke atas).</p>
+                <p class="text-[11px] text-slate-400 mt-2 italic">*Pembelian dibulatkan ke atas sesuai kemasan/pack game.</p>
+            </div>
+
+            <!-- Stock Optimizer / Limiting Factor Box -->
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <h2 class="text-sm font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked"></i> 3. Manajemen Sisa Stok
+                </h2>
+                <p class="text-xs text-slate-400 mb-3">Masukkan stok sisa di inventaris untuk mencari racikan maksimal yang bisa dibuat:</p>
+
+                <div id="stockInputContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1 mb-3">
+                    <!-- Populated via JS -->
+                </div>
+
+                <button onclick="calculateMaxPossibleRecipe()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs py-2 px-3 rounded-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Hitung Racikan Maksimal
+                </button>
+
+                <div id="stockResultBox" class="mt-4 p-3 bg-slate-900/90 rounded-lg border border-purple-900/50 hidden">
+                    <p class="text-xs text-purple-300 font-bold mb-1">Hasil Optimasi Stok:</p>
+                    <p class="text-xs text-slate-300 mb-2">Max Multiplier: <strong id="maxMultResult" class="text-emerald-400 font-bold">0x</strong> (<span id="maxWeightResult">0 g</span>)</p>
+                    <p class="text-[11px] text-rose-400 mb-2" id="limitingFactorMsg"></p>
+                    <button onclick="applyMaxMultiplier()" class="w-full bg-slate-800 hover:bg-slate-700 text-xs text-emerald-400 py-1.5 rounded border border-emerald-800 transition">
+                        Terapkan Multiplier Ini
+                    </button>
+                </div>
             </div>
 
             <!-- Chart Breakdown -->
@@ -182,9 +206,10 @@
                                 <th class="py-2.5 px-2">Kategori</th>
                                 <th class="py-2.5 px-2">Sumber</th>
                                 <th class="py-2.5 px-2 text-right">Per 1x (g)</th>
+                                <th class="py-2.5 px-2 text-right">Rasio (%)</th>
                                 <th class="py-2.5 px-2 text-right">Racikan (<span id="tableMultDisplay">1x</span>)</th>
                                 <th class="py-2.5 px-2 text-right">Pack Beli</th>
-                                <th class="py-2.5 px-2 text-right">Estimasi Biaya</th>
+                                <th class="py-2.5 px-2 text-right">Biaya</th>
                                 <th class="py-2.5 px-2 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -258,6 +283,7 @@
         let activeRecipeId = "supreme-pizza";
         let currentMultiplier = 1;
         let chartInstance = null;
+        let calculatedMaxMult = 1;
 
         window.addEventListener('DOMContentLoaded', () => {
             loadSavedData();
@@ -315,6 +341,67 @@
         function loadRecipe() {
             activeRecipeId = document.getElementById('recipeSelect').value;
             renderCurrentRecipeTable();
+            renderStockInputs();
+        }
+
+        function renderStockInputs() {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            const container = document.getElementById('stockInputContainer');
+            container.innerHTML = '';
+
+            if (!recipe || !recipe.ingredients.length) {
+                container.innerHTML = '<p class="text-xs text-slate-500">Tidak ada bahan di resep ini.</p>';
+                return;
+            }
+
+            recipe.ingredients.forEach((ing, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center text-xs gap-2";
+                div.innerHTML = `
+                    <span class="text-slate-300 truncate w-1/2">${ing.name}</span>
+                    <div class="flex items-center gap-1 w-1/2">
+                        <input type="number" id="stock_input_${idx}" placeholder="Sisa stok (g)" value="${ing.grams}" class="w-full text-right p-1 rounded border text-xs">
+                        <span class="text-slate-400">g</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function calculateMaxPossibleRecipe() {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe || !recipe.ingredients.length) return;
+
+            let minPossibleMult = Infinity;
+            let limitingItem = "";
+            let totalGrams1x = recipe.ingredients.reduce((acc, i) => acc + i.grams, 0);
+
+            recipe.ingredients.forEach((ing, idx) => {
+                const stockVal = parseFloat(document.getElementById(`stock_input_${idx}`).value) || 0;
+                const maxMultForThisItem = stockVal / ing.grams;
+
+                if (maxMultForThisItem < minPossibleMult) {
+                    minPossibleMult = maxMultForThisItem;
+                    limitingItem = ing.name;
+                }
+            });
+
+            if (minPossibleMult === Infinity || minPossibleMult <= 0) {
+                alert("Stok bahan tidak mencukupi untuk membuat racikan!");
+                return;
+            }
+
+            calculatedMaxMult = parseFloat(minPossibleMult.toFixed(2));
+            const totalWeightMax = Math.round(totalGrams1x * calculatedMaxMult);
+
+            document.getElementById('maxMultResult').textContent = `${calculatedMaxMult}x`;
+            document.getElementById('maxWeightResult').textContent = `${totalWeightMax.toLocaleString()} g`;
+            document.getElementById('limitingFactorMsg').textContent = `*Bahan pembatas terpakai habis: ${limitingItem}`;
+            document.getElementById('stockResultBox').classList.remove('hidden');
+        }
+
+        function applyMaxMultiplier() {
+            updateMultiplier(calculatedMaxMult);
         }
 
         function renderCurrentRecipeTable() {
@@ -325,7 +412,7 @@
             const tbody = document.getElementById('ingredientsTableBody');
             tbody.innerHTML = '';
 
-            let totalGrams1x = 0;
+            let totalGrams1x = recipe.ingredients.reduce((sum, item) => sum + item.grams, 0);
             let homeGramsScaled = 0;
             let shopGramsScaled = 0;
             let totalCredits = 0;
@@ -335,7 +422,8 @@
             recipe.ingredients.forEach((ing, index) => {
                 const catalogMeta = MATERIAL_CATALOG.find(m => m.name === ing.name) || { category: "Other", packGrams: 250, price: 0, currency: "Credits" };
                 const scaledGrams = Math.round(ing.grams * currentMultiplier);
-                totalGrams1x += ing.grams;
+                const pct = totalGrams1x > 0 ? ((ing.grams / totalGrams1x) * 100).toFixed(2) : 0;
+
                 catTotals[catalogMeta.category] = (catTotals[catalogMeta.category] || 0) + scaledGrams;
 
                 let packsNeeded = 0;
@@ -364,6 +452,7 @@
                     <td class="py-2.5 px-2 text-right">
                         <input type="number" value="${ing.grams}" onchange="updateIngredientGrams(${index}, this.value)" class="w-16 text-right p-1 rounded border text-xs"> g
                     </td>
+                    <td class="py-2.5 px-2 text-right text-slate-400">${pct}%</td>
                     <td class="py-2.5 px-2 text-right font-bold text-emerald-400">${scaledGrams.toLocaleString()} g</td>
                     <td class="py-2.5 px-2 text-right text-slate-300">${ing.source === 'Shop' ? `${packsNeeded} pack` : '-'}</td>
                     <td class="py-2.5 px-2 text-right font-semibold ${catalogMeta.currency === 'Credits' ? 'text-amber-400' : 'text-yellow-500'}">
@@ -407,6 +496,7 @@
             recipe.ingredients.push({ name, grams, source });
             saveData();
             renderCurrentRecipeTable();
+            renderStockInputs();
             document.getElementById('ingredientGram').value = '';
         }
 
@@ -418,6 +508,7 @@
                 recipe.ingredients[index].grams = parsed;
                 saveData();
                 renderCurrentRecipeTable();
+                renderStockInputs();
             }
         }
 
@@ -435,6 +526,7 @@
             recipe.ingredients.splice(index, 1);
             saveData();
             renderCurrentRecipeTable();
+            renderStockInputs();
         }
 
         function promptNewRecipe() {
@@ -446,6 +538,7 @@
             saveData();
             renderRecipeOptions();
             renderCurrentRecipeTable();
+            renderStockInputs();
         }
 
         function deleteCurrentRecipe() {
@@ -456,6 +549,7 @@
                 saveData();
                 renderRecipeOptions();
                 renderCurrentRecipeTable();
+                renderStockInputs();
             }
         }
 
@@ -500,6 +594,7 @@
                     saveData();
                     renderRecipeOptions();
                     renderCurrentRecipeTable();
+                    renderStockInputs();
                 } catch(err) { alert("Format JSON tidak valid!"); }
             };
             reader.readAsText(file);
