@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fishing Planet Groundbait Calculator & Price Estimator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .bg-card { background-color: #1e293b; }
+        .border-custom { border-color: #334155; }
+        input, select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        input:focus, select:focus {
+            border-color: #10b981 !important;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-fish-fins text-emerald-400 text-3xl"></i>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-wide">Fishing Planet Groundbait Calc</h1>
+                    <p class="text-xs text-slate-400">Calculator, Cost Estimator & Recipe Manager</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 px-3 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-download"></i> Export JSON
+                </button>
+                <label class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2 px-3 rounded-lg border border-slate-700 flex items-center gap-1.5 cursor-pointer transition">
+                    <i class="fa-solid fa-upload"></i> Import JSON
+                    <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Controls & Summary Column -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <!-- Recipe Selector & Multiplier -->
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <h2 class="text-sm font-semibold text-emerald-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Resep & Multiplier
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Pilih Resep</label>
+                        <select id="recipeSelect" onchange="loadRecipe()" class="w-full text-xs rounded-lg p-2.5 border">
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-medium text-slate-400">Pengali Umpan (Multiplier)</label>
+                            <span id="multiplierValueDisplay" class="text-sm font-bold text-emerald-400">1x</span>
+                        </div>
+                        <input type="range" id="multiplierSlider" min="0.5" max="10" step="0.5" value="1" oninput="updateMultiplier(this.value)" class="w-full accent-emerald-500">
+                        <div class="grid grid-cols-5 gap-1 mt-2">
+                            <button onclick="updateMultiplier(0.5)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">0.5x</button>
+                            <button onclick="updateMultiplier(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">1x</button>
+                            <button onclick="updateMultiplier(2)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">2x</button>
+                            <button onclick="updateMultiplier(3)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">3x</button>
+                            <button onclick="updateMultiplier(5)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-1 rounded border border-slate-700">5x</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Summary Box -->
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <h2 class="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-coins"></i> Total Estimasi Biaya Shop
+                </h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                        <p class="text-xs text-slate-400">Total Credits</p>
+                        <p id="totalCreditsCost" class="text-base font-extrabold text-amber-400 mt-0.5">0</p>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                        <p class="text-xs text-slate-400">Total Baitcoins</p>
+                        <p id="totalBaitcoinsCost" class="text-base font-extrabold text-yellow-500 mt-0.5">0</p>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-2 italic">*Jumlah pack/botol dihitung otomatis (dibulatkan ke atas).</p>
+            </div>
+
+            <!-- Chart Breakdown -->
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <h2 class="text-sm font-semibold text-sky-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Komposisi Umpan
+                </h2>
+                <div class="relative w-full h-44 flex justify-center">
+                    <canvas id="compositionChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Recipe Editor Table Column -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <div class="bg-card p-5 rounded-xl border border-custom shadow-xl">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <div>
+                        <h2 id="activeRecipeTitle" class="text-lg font-bold text-white">Supreme Pizza</h2>
+                        <p id="activeRecipeDesc" class="text-xs text-slate-400">Total Berat: <span id="totalWeightDisplay" class="font-bold text-emerald-400">0 g</span></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="promptNewRecipe()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Resep Baru
+                        </button>
+                        <button onclick="deleteCurrentRecipe()" class="bg-rose-900/50 hover:bg-rose-800/60 text-rose-300 border border-rose-800 text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash"></i> Hapus Resep
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stock Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-emerald-400">Home Stock: <strong id="homeWeightDisplay">0 g</strong> (<span id="homePctDisplay">0%</span>)</span>
+                        <span class="text-sky-400">Shop Purchase: <strong id="shopWeightDisplay">0 g</strong> (<span id="shopPctDisplay">0%</span>)</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden flex">
+                        <div id="homeProgressBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        <div id="shopProgressBar" class="bg-sky-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Add Ingredient Form -->
+                <div class="bg-slate-900/80 p-3.5 rounded-lg border border-slate-800 mb-4">
+                    <p class="text-xs font-semibold text-slate-300 mb-2">+ Tambah Bahan Ke Resep</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <div class="sm:col-span-5">
+                            <select id="catalogSelect" class="w-full text-xs rounded p-2 border"></select>
+                        </div>
+                        <div class="sm:col-span-3">
+                            <input type="number" id="ingredientGram" placeholder="Gram (1x)" class="w-full text-xs rounded p-2 border">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <select id="ingredientSource" class="w-full text-xs rounded p-2 border">
+                                <option value="Shop">Shop</option>
+                                <option value="Home">Home</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <button onclick="addIngredientToRecipe()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 px-2 rounded transition">
+                                Tambah
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ingredients Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300 border-collapse">
+                        <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                            <tr>
+                                <th class="py-2.5 px-2">Bahan</th>
+                                <th class="py-2.5 px-2">Kategori</th>
+                                <th class="py-2.5 px-2">Sumber</th>
+                                <th class="py-2.5 px-2 text-right">Per 1x (g)</th>
+                                <th class="py-2.5 px-2 text-right">Racikan (<span id="tableMultDisplay">1x</span>)</th>
+                                <th class="py-2.5 px-2 text-right">Pack Beli</th>
+                                <th class="py-2.5 px-2 text-right">Estimasi Biaya</th>
+                                <th class="py-2.5 px-2 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingredientsTableBody" class="divide-y divide-slate-800/60"></tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const MATERIAL_CATALOG = [
+            // BASE (1000g per pack)
+            { name: "Universal Mixture", category: "Base", packGrams: 1000, price: 700, currency: "Credits" },
+            { name: "Universal Mixture Golden", category: "Base", packGrams: 1000, price: 11, currency: "Baitcoins" },
+            { name: "Big Riverine Breamer", category: "Base", packGrams: 1000, price: 660, currency: "Credits" },
+            { name: "Big Riverine Breamer Golden", category: "Base", packGrams: 1000, price: 10, currency: "Baitcoins" },
+            { name: "Carp Rival", category: "Base", packGrams: 1000, price: 1500, currency: "Credits" },
+            { name: "Carp Rival Golden", category: "Base", packGrams: 1000, price: 23, currency: "Baitcoins" },
+            { name: "Crimson Cold Water", category: "Base", packGrams: 1000, price: 650, currency: "Credits" },
+            { name: "Active Feeder", category: "Base", packGrams: 1000, price: 850, currency: "Credits" },
+            { name: "Black Roacher", category: "Base", packGrams: 1000, price: 900, currency: "Credits" },
+            { name: "Catfish Destroyer", category: "Base", packGrams: 1000, price: 1650, currency: "Credits" },
+
+            // AROMAS (100g per bottle)
+            { name: "Tutti Frutti Supreme", category: "Aromas", packGrams: 100, price: 2250, currency: "Credits" },
+            { name: "Tutti Frutti Supreme Golden", category: "Aromas", packGrams: 100, price: 22, currency: "Baitcoins" },
+            { name: "Giant Octopus Supreme", category: "Aromas", packGrams: 100, price: 2450, currency: "Credits" },
+            { name: "Giant Octopus Supreme Golden", category: "Aromas", packGrams: 100, price: 24, currency: "Baitcoins" },
+            { name: "X Flavour Supreme", category: "Aromas", packGrams: 100, price: 2650, currency: "Credits" },
+            { name: "X Flavour Supreme Golden", category: "Aromas", packGrams: 100, price: 25, currency: "Baitcoins" },
+            { name: "Molasses Caramelized", category: "Aromas", packGrams: 100, price: 1200, currency: "Credits" },
+            { name: "BigBream Spicy", category: "Aromas", packGrams: 100, price: 1850, currency: "Credits" },
+            { name: "CSL (Corn Steep Liquor)", category: "Aromas", packGrams: 100, price: 2100, currency: "Credits" },
+
+            // PARTICLES
+            { name: "Oilcake-Pea Golden", category: "Particles", packGrams: 500, price: 3, currency: "Baitcoins" },
+            { name: "Hemp-Corn Golden", category: "Particles", packGrams: 500, price: 3, currency: "Baitcoins" },
+            { name: "Pastoncino mix Golden", category: "Particles", packGrams: 500, price: 5, currency: "Baitcoins" },
+            { name: "Selective Crushed Grains & Seeds", category: "Particles", packGrams: 500, price: 5, currency: "Baitcoins" },
+            { name: "Selective Forage Bloodworm", category: "Particles", packGrams: 500, price: 5, currency: "Baitcoins" },
+            { name: "Oilcake-Pea", category: "Particles", packGrams: 250, price: 200, currency: "Credits" },
+            { name: "Hemp-Corn", category: "Particles", packGrams: 250, price: 230, currency: "Credits" },
+            { name: "Millet and Hemp", category: "Particles", packGrams: 250, price: 275, currency: "Credits" },
+            { name: "Crushed Grains and Seeds", category: "Particles", packGrams: 500, price: 335, currency: "Credits" },
+            { name: "Pastoncino mix", category: "Particles", packGrams: 250, price: 340, currency: "Credits" },
+            { name: "Forage Bloodworm", category: "Particles", packGrams: 250, price: 425, currency: "Credits" }
+        ];
+
+        const DEFAULT_RECIPES = [
+            {
+                id: "supreme-pizza",
+                name: "Supreme Pizza",
+                ingredients: [
+                    { name: "Universal Mixture", grams: 250, source: "Home" },
+                    { name: "Carp Rival", grams: 1500, source: "Shop" },
+                    { name: "Big Riverine Breamer", grams: 750, source: "Shop" },
+                    { name: "Tutti Frutti Supreme", grams: 112, source: "Shop" },
+                    { name: "X Flavour Supreme", grams: 100, source: "Shop" },
+                    { name: "Giant Octopus Supreme", grams: 112, source: "Shop" },
+                    { name: "Hemp-Corn", grams: 249, source: "Home" },
+                    { name: "Oilcake-Pea", grams: 249, source: "Home" }
+                ]
+            }
+        ];
+
+        let recipes = [];
+        let activeRecipeId = "supreme-pizza";
+        let currentMultiplier = 1;
+        let chartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSavedData();
+            populateCatalogDropdown();
+            renderRecipeOptions();
+            loadRecipe();
+            initChart();
+        });
+
+        function loadSavedData() {
+            const saved = localStorage.getItem('fp_groundbait_recipes');
+            if (saved) {
+                try { recipes = JSON.parse(saved); } catch(e) { recipes = [...DEFAULT_RECIPES]; }
+            } else { recipes = [...DEFAULT_RECIPES]; }
+        }
+
+        function saveData() { localStorage.setItem('fp_groundbait_recipes', JSON.stringify(recipes)); }
+
+        function populateCatalogDropdown() {
+            const select = document.getElementById('catalogSelect');
+            select.innerHTML = '<option value="">-- Pilih Bahan --</option>';
+            ["Base", "Aromas", "Particles"].forEach(cat => {
+                const group = document.createElement('optgroup');
+                group.label = cat;
+                MATERIAL_CATALOG.filter(m => m.category === cat).forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.name;
+                    opt.textContent = `${item.name} (${item.packGrams}g - ${item.price} ${item.currency})`;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            });
+        }
+
+        function renderRecipeOptions() {
+            const select = document.getElementById('recipeSelect');
+            select.innerHTML = '';
+            recipes.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                if (r.id === activeRecipeId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function updateMultiplier(val) {
+            currentMultiplier = parseFloat(val);
+            document.getElementById('multiplierValueDisplay').textContent = `${currentMultiplier}x`;
+            document.getElementById('multiplierSlider').value = currentMultiplier;
+            document.getElementById('tableMultDisplay').textContent = `${currentMultiplier}x`;
+            renderCurrentRecipeTable();
+        }
+
+        function loadRecipe() {
+            activeRecipeId = document.getElementById('recipeSelect').value;
+            renderCurrentRecipeTable();
+        }
+
+        function renderCurrentRecipeTable() {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe) return;
+
+            document.getElementById('activeRecipeTitle').textContent = recipe.name;
+            const tbody = document.getElementById('ingredientsTableBody');
+            tbody.innerHTML = '';
+
+            let totalGrams1x = 0;
+            let homeGramsScaled = 0;
+            let shopGramsScaled = 0;
+            let totalCredits = 0;
+            let totalBaitcoins = 0;
+            let catTotals = { Base: 0, Aromas: 0, Particles: 0 };
+
+            recipe.ingredients.forEach((ing, index) => {
+                const catalogMeta = MATERIAL_CATALOG.find(m => m.name === ing.name) || { category: "Other", packGrams: 250, price: 0, currency: "Credits" };
+                const scaledGrams = Math.round(ing.grams * currentMultiplier);
+                totalGrams1x += ing.grams;
+                catTotals[catalogMeta.category] = (catTotals[catalogMeta.category] || 0) + scaledGrams;
+
+                let packsNeeded = 0;
+                let cost = 0;
+
+                if (ing.source === 'Shop') {
+                    shopGramsScaled += scaledGrams;
+                    packsNeeded = Math.ceil(scaledGrams / catalogMeta.packGrams);
+                    cost = packsNeeded * catalogMeta.price;
+                    if (catalogMeta.currency === 'Credits') totalCredits += cost;
+                    else totalBaitcoins += cost;
+                } else {
+                    homeGramsScaled += scaledGrams;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 border-b border-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-medium text-white">${ing.name}</td>
+                    <td class="py-2.5 px-2 text-slate-400">${catalogMeta.category}</td>
+                    <td class="py-2.5 px-2">
+                        <button onclick="toggleSource(${index})" class="px-2 py-0.5 rounded text-[10px] font-semibold ${ing.source === 'Shop' ? 'bg-sky-950/80 text-sky-400 border border-sky-800' : 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'}">
+                            ${ing.source}
+                        </button>
+                    </td>
+                    <td class="py-2.5 px-2 text-right">
+                        <input type="number" value="${ing.grams}" onchange="updateIngredientGrams(${index}, this.value)" class="w-16 text-right p-1 rounded border text-xs"> g
+                    </td>
+                    <td class="py-2.5 px-2 text-right font-bold text-emerald-400">${scaledGrams.toLocaleString()} g</td>
+                    <td class="py-2.5 px-2 text-right text-slate-300">${ing.source === 'Shop' ? `${packsNeeded} pack` : '-'}</td>
+                    <td class="py-2.5 px-2 text-right font-semibold ${catalogMeta.currency === 'Credits' ? 'text-amber-400' : 'text-yellow-500'}">
+                        ${ing.source === 'Shop' ? `${cost.toLocaleString()}${catalogMeta.currency === 'Credits' ? 'Cr' : 'BC'}` : '-'}
+                    </td>
+                    <td class="py-2.5 px-2 text-center">
+                        <button onclick="removeIngredient(${index})" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const grandTotalScaled = Math.round(totalGrams1x * currentMultiplier);
+            document.getElementById('totalWeightDisplay').textContent = `${grandTotalScaled.toLocaleString()} g`;
+            document.getElementById('homeWeightDisplay').textContent = `${homeGramsScaled.toLocaleString()} g`;
+            document.getElementById('shopWeightDisplay').textContent = `${shopGramsScaled.toLocaleString()} g`;
+
+            const homePct = grandTotalScaled > 0 ? ((homeGramsScaled / grandTotalScaled) * 100).toFixed(1) : 0;
+            const shopPct = grandTotalScaled > 0 ? ((shopGramsScaled / grandTotalScaled) * 100).toFixed(1) : 0;
+
+            document.getElementById('homePctDisplay').textContent = `${homePct}%`;
+            document.getElementById('shopPctDisplay').textContent = `${shopPct}%`;
+            document.getElementById('homeProgressBar').style.width = `${homePct}%`;
+            document.getElementById('shopProgressBar').style.width = `${shopPct}%`;
+
+            document.getElementById('totalCreditsCost').textContent = `${totalCredits.toLocaleString()} Credits`;
+            document.getElementById('totalBaitcoinsCost').textContent = `${totalBaitcoins.toLocaleString()} BC`;
+
+            updateChart(catTotals);
+        }
+
+        function addIngredientToRecipe() {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe) return;
+            const name = document.getElementById('catalogSelect').value;
+            const grams = parseFloat(document.getElementById('ingredientGram').value);
+            const source = document.getElementById('ingredientSource').value;
+
+            if (!name || isNaN(grams) || grams <= 0) return alert("Pilih bahan dan jumlah gram yang valid!");
+
+            recipe.ingredients.push({ name, grams, source });
+            saveData();
+            renderCurrentRecipeTable();
+            document.getElementById('ingredientGram').value = '';
+        }
+
+        function updateIngredientGrams(index, val) {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe) return;
+            const parsed = parseFloat(val);
+            if (!isNaN(parsed) && parsed > 0) {
+                recipe.ingredients[index].grams = parsed;
+                saveData();
+                renderCurrentRecipeTable();
+            }
+        }
+
+        function toggleSource(index) {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe) return;
+            recipe.ingredients[index].source = recipe.ingredients[index].source === 'Shop' ? 'Home' : 'Shop';
+            saveData();
+            renderCurrentRecipeTable();
+        }
+
+        function removeIngredient(index) {
+            const recipe = recipes.find(r => r.id === activeRecipeId);
+            if (!recipe) return;
+            recipe.ingredients.splice(index, 1);
+            saveData();
+            renderCurrentRecipeTable();
+        }
+
+        function promptNewRecipe() {
+            const name = prompt("Masukkan nama resep baru:");
+            if (!name) return;
+            const id = 'recipe-' + Date.now();
+            recipes.push({ id, name, ingredients: [] });
+            activeRecipeId = id;
+            saveData();
+            renderRecipeOptions();
+            renderCurrentRecipeTable();
+        }
+
+        function deleteCurrentRecipe() {
+            if (recipes.length <= 1) return alert("Minimal harus ada 1 resep!");
+            if (confirm("Yakin ingin menghapus resep ini?")) {
+                recipes = recipes.filter(r => r.id !== activeRecipeId);
+                activeRecipeId = recipes[0].id;
+                saveData();
+                renderRecipeOptions();
+                renderCurrentRecipeTable();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('compositionChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Base', 'Aromas', 'Particles'],
+                    datasets: [{ data: [0, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } }
+                }
+            });
+        }
+
+        function updateChart(totals) {
+            if (!chartInstance) return;
+            chartInstance.data.datasets[0].data = [totals.Base || 0, totals.Aromas || 0, totals.Particles || 0];
+            chartInstance.update();
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(recipes, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'fp_groundbait_recipes.json';
+            a.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    recipes = JSON.parse(e.target.result);
+                    activeRecipeId = recipes[0].id;
+                    saveData();
+                    renderRecipeOptions();
+                    renderCurrentRecipeTable();
+                } catch(err) { alert("Format JSON tidak valid!"); }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
