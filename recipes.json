@@ -12,5 +12,88 @@
       { "name": "Hemp-Corn", "grams": 249, "source": "Home" },
       { "name": "Oilcake-Pea", "grams": 249, "source": "Home" }
     ]
+  },
+
+  {
+    "id": "sunny-day-night-a",
+    "name": "Sunny Day/Night — A",
+    "ingredients": [
+      { "name": "Carp Rival", "grams": 1474, "source": "Shop" },
+      { "name": "Catfish Destroyer", "grams": 340, "source": "Shop" },
+      { "name": "Big Riverine Breamer", "grams": 680, "source": "Shop" },
+      { "name": "Tutti Frutti Supreme", "grams": 56, "source": "Shop" },
+      { "name": "CSL (Corn Steep Liquor)", "grams": 57, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 57, "source": "Shop" },
+      { "name": "Oilcake-Pea", "grams": 227, "source": "Home" },
+      { "name": "Hemp-Corn", "grams": 227, "source": "Home" }
+    ]
+  },
+  {
+    "id": "cloudy-day-night-b",
+    "name": "Cloudy Day/Night — B",
+    "ingredients": [
+      { "name": "Carp Rival", "grams": 1474, "source": "Shop" },
+      { "name": "Catfish Destroyer", "grams": 340, "source": "Shop" },
+      { "name": "Big Riverine Breamer", "grams": 680, "source": "Shop" },
+      { "name": "Giant Octopus Supreme", "grams": 112, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 56, "source": "Shop" },
+      { "name": "BigBream Spicy", "grams": 56, "source": "Shop" },
+      { "name": "Oilcake-Pea", "grams": 220, "source": "Home" },
+      { "name": "Hemp-Corn", "grams": 250, "source": "Home" }
+    ]
+  },
+  {
+    "id": "sunny-cerah-isaltj",
+    "name": "SUNNY / CERAH (ISALTJ)",
+    "ingredients": [
+      { "name": "Carp Rival", "grams": 1500, "source": "Shop" },
+      { "name": "Big Riverine Breamer", "grams": 500, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 87, "source": "Shop" },
+      { "name": "CSL (Corn Steep Liquor)", "grams": 87, "source": "Home" },
+      { "name": "Tutti Frutti Supreme", "grams": 87, "source": "Shop" },
+      { "name": "Oilcake-Pea", "grams": 186, "source": "Home" },
+      { "name": "Hemp-Corn", "grams": 186, "source": "Home" }
+    ]
+  },
+  {
+    "id": "cloudy-berawan-isaltj",
+    "name": "CLOUDY / BERAWAN (ISALTJ)",
+    "ingredients": [
+      { "name": "Big Riverine Breamer", "grams": 250, "source": "Shop" },
+      { "name": "Carp Rival", "grams": 1500, "source": "Shop" },
+      { "name": "Catfish Destroyer", "grams": 250, "source": "Shop" },
+      { "name": "Giant Octopus Supreme", "grams": 87, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 87, "source": "Shop" },
+      { "name": "CSL (Corn Steep Liquor)", "grams": 87, "source": "Home" },
+      { "name": "Hemp-Corn", "grams": 186, "source": "Home" },
+      { "name": "Oilcake-Pea", "grams": 186, "source": "Home" }
+    ]
+  },
+  {
+    "id": "sunny-cerah-chochopow",
+    "name": "SUNNY / CERAH (Chochopow)",
+    "ingredients": [
+      { "name": "Big Riverine Breamer", "grams": 500, "source": "Shop" },
+      { "name": "Carp Rival", "grams": 1500, "source": "Shop" },
+      { "name": "X Flavour Supreme", "grams": 50, "source": "Shop" },
+      { "name": "Tutti Frutti Supreme", "grams": 50, "source": "Shop" },
+      { "name": "Giant Octopus Supreme", "grams": 50, "source": "Shop" },
+      { "name": "Hemp-Corn", "grams": 125, "source": "Home" },
+      { "name": "Pastoncino mix", "grams": 125, "source": "Home" },
+      { "name": "Oilcake-Pea", "grams": 125, "source": "Home" }
+    ]
+  },
+  {
+    "id": "cloudy-berawan-chochopow",
+    "name": "CLOUDY / BERAWAN (Chochopow)",
+    "ingredients": [
+      { "name": "Big Riverine Breamer", "grams": 250, "source": "Shop" },
+      { "name": "Carp Rival", "grams": 750, "source": "Shop" },
+      { "name": "Catfish Destroyer", "grams": 500, "source": "Shop" },
+      { "name": "Giant Octopus Supreme", "grams": 50, "source": "Shop" },
+      { "name": "CSL (Corn Steep Liquor)", "grams": 50, "source": "Home" },
+      { "name": "Hemp-Corn", "grams": 140, "source": "Home" },
+      { "name": "Oilcake-Pea", "grams": 140, "source": "Home" }
+    ]
   }
 ]
